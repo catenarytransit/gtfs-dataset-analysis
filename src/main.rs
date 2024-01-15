@@ -19,7 +19,7 @@ struct RawTranslationRow {
     field_value: Option<String>,
 }
 
-#[derive(Debug, serde::Deserialize, Eq, PartialEq)]
+#[derive(Debug, serde::Deserialize, Eq, PartialEq, serde::Serialize)]
 struct TranslationPivotRow {
     count: u64,
     table_name: String,
@@ -47,10 +47,26 @@ fn main() -> Result<(), Box<dyn Error>> {
         .expect("Add an unzipped folder path via --input PATH")
         .get::<String>("input");
 
-    let mut agency_info: HashMap<String, Agency> = HashMap::new();
-    let mut translation_pivot: HashMap<TranslationHashKey, i64> = HashMap::new();
+    let mut agency_info: HashMap<String, Vec<Agency>> = HashMap::new();
+    let mut translation_pivot: HashMap<TranslationHashKey, u64> = HashMap::new();
 
     let path = fs::read_dir(inputpath.unwrap().as_str()).unwrap();
+
+    let mut agency_info_wtr = csv::Writer::from_path("agency_analysis.csv").unwrap();
+
+    let mut translation_pivot_wtr = csv::Writer::from_writer(vec![]);
+
+    agency_info_wtr.write_record(&[
+        &"feed_name",
+        &"agency_id",
+        &"name",
+        &"url",
+        &"timezone",
+        &"lang",
+        &"phone",
+        &"fare_url",
+        &"email",
+    ])?;
 
     for entry in path {
         let entry = entry.unwrap();
@@ -58,6 +74,35 @@ fn main() -> Result<(), Box<dyn Error>> {
         println!("Reading {}", feed_name);
         if entry.path().is_dir() {
             let feed_dir = fs::read_dir(entry.path()).unwrap();
+
+            //read agency data
+            let agency_info = fs::read_to_string(Path::new(
+                format!("{}/agency.txt", entry.path().to_str().unwrap()).as_str(),
+            ));
+
+            if agency_info.is_ok() {
+                let agency_info = agency_info.unwrap();
+
+                let mut reader = csv::Reader::from_reader(agency_info.as_bytes());
+
+                for result in reader.deserialize() {
+                    let row: Result<Agency, csv::Error> = result;
+
+                    if let Ok(row) = row {
+                        agency_info_wtr.write_record(&[
+                            &feed_name,
+                            &row.id.unwrap_or_default(),
+                            &row.name,
+                            &row.url,
+                            &row.timezone,
+                            &row.lang.unwrap_or_default(),
+                            &row.phone.unwrap_or_default(),
+                            &row.fare_url.unwrap_or_default(),
+                            &row.email.unwrap_or_default(),
+                        ])?;
+                    }
+                }
+            }
 
             //read translations if exist
             let translations = fs::read_to_string(Path::new(
@@ -92,6 +137,21 @@ fn main() -> Result<(), Box<dyn Error>> {
                 }
             }
         }
+    }
+
+    //write the pivot table
+
+    for (k,v) in translation_pivot {
+        translation_pivot_wtr.serialize(TranslationPivotRow {
+            table_name: k.table_name,
+            count: v,
+            field_name: k.field_name,
+            language: k.language,
+            has_record_id: k.has_record_id,
+            has_record_sub_id: k.has_record_sub_id,
+            has_field_value: k.has_field_value,
+            feed_id: k.feed_id
+    })?;
     }
 
     Ok(())
