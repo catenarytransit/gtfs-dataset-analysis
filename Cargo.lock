@@ -486,7 +486,9 @@ name = "gtfs-dataset-analysis"
 version = "0.1.0"
 dependencies = [
  "arguments",
+ "csv",
  "gtfs-structures",
+ "serde",
 ]
 
 [[package]]
