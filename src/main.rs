@@ -5,9 +5,9 @@
 use csv::ReaderBuilder;
 use gtfs_structures::Agency;
 use std::collections::HashMap;
-use std::io::Write;
 use std::error::Error;
 use std::fs;
+use std::io::Write;
 use std::path::Path;
 
 #[derive(Debug, serde::Deserialize, Eq, PartialEq)]
@@ -144,7 +144,7 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     //write the pivot table
 
-    for (k,v) in translation_pivot {
+    for (k, v) in translation_pivot {
         translation_pivot_wtr.serialize(TranslationPivotRow {
             table_name: k.table_name,
             count: v,
@@ -153,14 +153,16 @@ fn main() -> Result<(), Box<dyn Error>> {
             has_record_id: k.has_record_id,
             has_record_sub_id: k.has_record_sub_id,
             has_field_value: k.has_field_value,
-            feed_id: k.feed_id
-    })?;
+            feed_id: k.feed_id,
+        })?;
     }
 
     let translation_csv = String::from_utf8(translation_pivot_wtr.into_inner().unwrap()).unwrap();
     let mut translation_file = std::fs::File::create("./translation_pivot_analysis.csv").unwrap();
 
-    translation_file.write_all(translation_csv.as_bytes()).unwrap();
+    translation_file
+        .write_all(translation_csv.as_bytes())
+        .unwrap();
 
     Ok(())
 }
