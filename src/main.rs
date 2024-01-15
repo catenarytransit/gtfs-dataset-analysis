@@ -5,6 +5,7 @@
 use csv::ReaderBuilder;
 use gtfs_structures::Agency;
 use std::collections::HashMap;
+use std::io::Write;
 use std::error::Error;
 use std::fs;
 use std::path::Path;
@@ -153,6 +154,11 @@ fn main() -> Result<(), Box<dyn Error>> {
             feed_id: k.feed_id
     })?;
     }
+
+    let translation_csv = String::from_utf8(translation_pivot_wtr.into_inner().unwrap()).unwrap();
+    let mut translation_file = std::fs::File::create("./translation_pivot_analysis").unwrap();
+
+    translation_file.write_all(translation_csv.as_bytes()).unwrap();
 
     Ok(())
 }
