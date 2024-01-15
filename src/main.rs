@@ -134,6 +134,8 @@ fn main() -> Result<(), Box<dyn Error>> {
                             .entry(hash_key)
                             .and_modify(|counter| *counter += 1)
                             .or_insert(1);
+                    } else {
+                        println!("Error in translation reading {:?}", row.unwrap_err());
                     }
                 }
             }
@@ -156,7 +158,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     }
 
     let translation_csv = String::from_utf8(translation_pivot_wtr.into_inner().unwrap()).unwrap();
-    let mut translation_file = std::fs::File::create("./translation_pivot_analysis").unwrap();
+    let mut translation_file = std::fs::File::create("./translation_pivot_analysis.csv").unwrap();
 
     translation_file.write_all(translation_csv.as_bytes()).unwrap();
 
