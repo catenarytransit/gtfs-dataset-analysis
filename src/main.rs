@@ -13,8 +13,8 @@ use std::path::Path;
 #[derive(Debug, serde::Deserialize, Eq, PartialEq)]
 struct RawTranslationRow {
     table_name: String,
-    field_name: String,
     language: String,
+    field_name: String,
     record_id: Option<String>,
     record_sub_id: Option<String>,
     field_value: Option<String>,
@@ -22,25 +22,25 @@ struct RawTranslationRow {
 
 #[derive(Debug, serde::Deserialize, Eq, PartialEq, serde::Serialize)]
 struct TranslationPivotRow {
-    count: u64,
+    feed_id: String,
     table_name: String,
-    field_name: String,
     language: String,
+    field_name: String,
     has_record_id: bool,
     has_record_sub_id: bool,
     has_field_value: bool,
-    feed_id: String,
+    count: u64,
 }
 
 #[derive(Hash, PartialEq, Eq)]
 struct TranslationHashKey {
+    feed_id: String,
     table_name: String,
-    field_name: String,
     language: String,
+    field_name: String,
     has_record_id: bool,
     has_record_sub_id: bool,
     has_field_value: bool,
-    feed_id: String,
 }
 
 fn main() -> Result<(), Box<dyn Error>> {
